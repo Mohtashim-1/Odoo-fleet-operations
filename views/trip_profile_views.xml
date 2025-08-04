@@ -15,6 +15,8 @@
         class="btn-info"
         invisible="trip_status in ('cancelled', 'invoiced')"/>
 
+
+
 <!-- Set Scheduled - Show when status is confirm -->
 <button name="action_set_scheduled"
         type="object"
@@ -187,7 +189,7 @@
                                 <field name="duration" readonly="parent.trip_status == 'departed'"/>
                                  <field name="qty" readonly="parent.trip_status == 'departed'"/>
                                    <field name="unit_price" readonly="parent.trip_status == 'departed'"/>
-                                    <field name="extra_hour" readonly="parent.trip_status != 'departed'"/>
+                                    <field name="extra_hour" readonly="parent.trip_status in ('completed', 'cancelled', 'invoiced')"/>
                                     <field name="extra_hour_charges" readonly="parent.trip_status == 'departed'"/>
                                     <field name="amount"
                                     readonly="extra_hour_charges == False or parent.trip_status == 'departed'"/>

@@ -292,6 +292,10 @@ class TripProfile(models.Model):
             'invoice_line_ids': [],
         }
         
+        # Set service type from the first vehicle line if available
+        if self.vehicle_line_ids and self.vehicle_line_ids[0].service_type_id:
+            invoice_vals['service_type'] = self.vehicle_line_ids[0].service_type_id.id
+        
         # Create invoice lines from vehicle lines
         for vehicle_line in self.vehicle_line_ids:
             # Get data from vehicle line or linked car booking line
@@ -323,6 +327,7 @@ class TripProfile(models.Model):
             
             # Calculate total amount including extra charges
             base_amount = price_unit * quantity
+            # Calculate extra charges directly
             extra_charges = extra_hour * extra_hour_charges
             total_amount = base_amount + extra_charges
             
@@ -354,7 +359,7 @@ class TripProfile(models.Model):
                 # Add car booking line reference if available
                 'car_booking_line_id': vehicle_line.car_booking_line_id.id if vehicle_line.car_booking_line_id else False,
                 # Add service type, car type, and dates
-                'service_type_id': vehicle_line.service_type_id.id if vehicle_line.service_type_id else False,
+                'service_type': vehicle_line.service_type_id.id if vehicle_line.service_type_id else False,
                 'car_type': car_type,
                 'date_start': start_date,
                 'date_end': end_date,
@@ -476,7 +481,7 @@ class TripProfile(models.Model):
 
     
     def action_sync_vehicle_details(self):
-        """Sync vehicle details from trip profile to car booking lines"""
+        """Sync vehicle details and guest information from trip profile to car booking lines"""
         for trip in self:
             booking = trip.booking_id
             if not booking:
@@ -509,6 +514,7 @@ class TripProfile(models.Model):
             print(f"DEBUG: car.booking.line model available, checking vehicle lines")
             sync_count = 0
             linked_count = 0
+            guest_sync_count = 0
             total_vehicle_lines = len(trip.vehicle_line_ids)
             booking_lines = booking.car_booking_lines
             
@@ -576,7 +582,22 @@ class TripProfile(models.Model):
                 else:
                     print(f"DEBUG: Vehicle line has no car_booking_line_id")
             
-            print(f"DEBUG: Sync completed, sync_count: {sync_count}, linked_count: {linked_count}")
+            # Sync guest information from trip profile to car booking and booking lines
+            if trip.guest_name:
+                # Sync to main car booking
+                if trip.guest_name != booking.guest_name:
+                    booking.guest_name = trip.guest_name.id
+                    print(f"DEBUG: Synced guest_name to car booking: {trip.guest_name.name}")
+                
+                # Sync to car booking lines
+                for booking_line in booking.car_booking_lines:
+                    if trip.guest_name not in booking_line.guest_ids:
+                        guest_ids = booking_line.guest_ids.ids + [trip.guest_name.id]
+                        booking_line.guest_ids = [(6, 0, guest_ids)]
+                        guest_sync_count += 1
+                        print(f"DEBUG: Synced guest_name to booking line {booking_line.id}: {trip.guest_name.name}")
+            
+            print(f"DEBUG: Sync completed, sync_count: {sync_count}, linked_count: {linked_count}, guest_sync_count: {guest_sync_count}")
             
             # Set sync_vehicle_done to True after sync is completed
             trip.sync_vehicle_done = True
@@ -585,7 +606,9 @@ class TripProfile(models.Model):
             if linked_count > 0:
                 message += f"Linked {linked_count} vehicle lines to car booking lines. "
             if sync_count > 0:
-                message += f"Successfully synced {sync_count} vehicle details to car booking lines."
+                message += f"Successfully synced {sync_count} vehicle details to car booking lines. "
+            if guest_sync_count > 0:
+                message += f"Synced guest information to {guest_sync_count} car booking lines."
             
             if not message:
                 if total_vehicle_lines > 0 and len(booking.car_booking_lines) == 0:
@@ -1676,30 +1699,75 @@ class TripProfile(models.Model):
             debug_info.append(f"  Line {i+1}: {vehicle_line.name}")
             debug_info.append(f"    service_type_id: {vehicle_line.service_type_id.name if vehicle_line.service_type_id else 'None'}")
             debug_info.append(f"    car_booking_line_id: {vehicle_line.car_booking_line_id.name if vehicle_line.car_booking_line_id else 'None'}")
-            debug_info.append(f"    vehicle_id: {vehicle_line.vehicle_id.name if vehicle_line.vehicle_id else 'None'}")
-            
-            # Check if service type matches
-            if vehicle_line.car_booking_line_id and vehicle_line.car_booking_line_id.type_of_service_id:
-                expected_service = vehicle_line.car_booking_line_id.type_of_service_id.name
-                actual_service = vehicle_line.service_type_id.name if vehicle_line.service_type_id else 'None'
-                if expected_service == actual_service:
-                    debug_info.append(f"    ✓ Service type matches: {expected_service}")
-                else:
-                    debug_info.append(f"    ✗ Service type mismatch! Expected: {expected_service}, Actual: {actual_service}")
-            else:
-                debug_info.append(f"    ⚠ No car booking line or service type to compare")
             debug_info.append("")
         
+        # Show debug info in notification
+        debug_text = "\n".join(debug_info)
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': 'Service Type Debug',
-                'message': '\n'.join(debug_info),
+                'title': 'Service Type Debug Info',
+                'message': debug_text,
                 'type': 'info',
                 'sticky': True,
             }
         }
+
+    def action_sync_guest_from_booking(self):
+        """Sync guest information from car booking to trip profile"""
+        for trip in self:
+            if trip.booking_id:
+                booking = trip.booking_id
+                trip_update_vals = {}
+                
+                # Sync guest information from car booking to trip profile
+                if booking.guest_name and booking.guest_name != trip.guest_name:
+                    trip_update_vals['guest_name'] = booking.guest_name.id
+                    trip_update_vals['guest_id'] = booking.guest_name.id
+                    print(f"DEBUG: Syncing guest_name from car booking: {booking.guest_name.name}")
+                
+                if booking.guest_phone and booking.guest_phone != trip.guest_phone:
+                    trip_update_vals['guest_phone'] = booking.guest_phone
+                    print(f"DEBUG: Syncing guest_phone from car booking: {booking.guest_phone}")
+                
+                # Update trip profile with guest information
+                if trip_update_vals:
+                    trip.write(trip_update_vals)
+                    print(f"DEBUG: Updated trip profile with guest information")
+                    
+                    return {
+                        'type': 'ir.actions.client',
+                        'tag': 'display_notification',
+                        'params': {
+                            'title': 'Success',
+                            'message': f'Guest information synced from car booking: {booking.guest_name.name if booking.guest_name else "N/A"}',
+                            'type': 'success',
+                            'sticky': False,
+                        }
+                    }
+                else:
+                    return {
+                        'type': 'ir.actions.client',
+                        'tag': 'display_notification',
+                        'params': {
+                            'title': 'Info',
+                            'message': 'No guest information to sync or guest information is already up to date.',
+                            'type': 'info',
+                            'sticky': False,
+                        }
+                    }
+            else:
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': 'Warning',
+                        'message': 'No car booking linked to this trip profile.',
+                        'type': 'warning',
+                        'sticky': False,
+                    }
+                }
 
     @api.model
     def create_from_booking_with_save(self, booking):
@@ -1766,6 +1834,134 @@ class TripProfile(models.Model):
         
         # Now create the trip profile
         return self.create_from_booking(booking)
+
+    @api.onchange('guest_name')
+    def _onchange_guest_name(self):
+        """Auto-sync guest information when guest_name changes"""
+        if self.guest_name and self.booking_id:
+            # Sync to main car booking
+            if self.guest_name != self.booking_id.guest_name:
+                self.booking_id.guest_name = self.guest_name.id
+                print(f"DEBUG: Auto-synced guest_name to car booking: {self.guest_name.name}")
+            
+            # Sync to car booking lines
+            for booking_line in self.booking_id.car_booking_lines:
+                if self.guest_name not in booking_line.guest_ids:
+                    guest_ids = booking_line.guest_ids.ids + [self.guest_name.id]
+                    booking_line.guest_ids = [(6, 0, guest_ids)]
+                    print(f"DEBUG: Auto-synced guest_name to booking line {booking_line.id}: {self.guest_name.name}")
+
+    def action_sync_guest_to_booking(self):
+        """Sync guest information from trip profile back to car booking"""
+        for trip in self:
+            if trip.booking_id:
+                booking = trip.booking_id
+                booking_update_vals = {}
+                
+                # Sync guest information from trip profile to car booking
+                if trip.guest_name and trip.guest_name != booking.guest_name:
+                    booking_update_vals['guest_name'] = trip.guest_name.id
+                    print(f"DEBUG: Syncing guest_name to car booking: {trip.guest_name.name}")
+                
+                if trip.guest_phone and trip.guest_phone != booking.guest_phone:
+                    booking_update_vals['guest_phone'] = trip.guest_phone
+                    print(f"DEBUG: Syncing guest_phone to car booking: {trip.guest_phone}")
+                
+                # Update car booking with guest information
+                if booking_update_vals:
+                    booking.write(booking_update_vals)
+                    print(f"DEBUG: Updated car booking with guest information")
+                    
+                    return {
+                        'type': 'ir.actions.client',
+                        'tag': 'display_notification',
+                        'params': {
+                            'title': 'Success',
+                            'message': f'Guest information synced to car booking: {trip.guest_name.name if trip.guest_name else "N/A"}',
+                            'type': 'success',
+                            'sticky': False,
+                        }
+                    }
+                else:
+                    return {
+                        'type': 'ir.actions.client',
+                        'tag': 'display_notification',
+                        'params': {
+                            'title': 'Info',
+                            'message': 'No guest information to sync or guest information is already up to date.',
+                            'type': 'info',
+                            'sticky': False,
+                        }
+                    }
+            else:
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': 'Warning',
+                        'message': 'No car booking linked to this trip profile.',
+                        'type': 'warning',
+                        'sticky': False,
+                    }
+                }
+
+    def action_sync_guest_to_booking_lines(self):
+        """Sync guest information from trip profile to car booking lines"""
+        for trip in self:
+            if trip.booking_id:
+                booking = trip.booking_id
+                sync_count = 0
+                
+                # Sync guest information from trip profile to car booking lines
+                for booking_line in booking.car_booking_lines:
+                    booking_line_update_vals = {}
+                    
+                    # Sync guest_ids from trip profile to car booking line
+                    if trip.guest_name and trip.guest_name not in booking_line.guest_ids:
+                        # Add the guest to the booking line's guest_ids
+                        guest_ids = booking_line.guest_ids.ids + [trip.guest_name.id]
+                        booking_line_update_vals['guest_ids'] = [(6, 0, guest_ids)]
+                        print(f"DEBUG: Adding guest to booking line {booking_line.id}: {trip.guest_name.name}")
+                    
+                    # Update car booking line with guest information
+                    if booking_line_update_vals:
+                        booking_line.write(booking_line_update_vals)
+                        sync_count += 1
+                        print(f"DEBUG: Updated car booking line {booking_line.id} with guest information")
+                
+                if sync_count > 0:
+                    return {
+                        'type': 'ir.actions.client',
+                        'tag': 'display_notification',
+                        'params': {
+                            'title': 'Success',
+                            'message': f'Guest information synced to {sync_count} car booking lines: {trip.guest_name.name if trip.guest_name else "N/A"}',
+                            'type': 'success',
+                            'sticky': False,
+                        }
+                    }
+                else:
+                    return {
+                        'type': 'ir.actions.client',
+                        'tag': 'display_notification',
+                        'params': {
+                            'title': 'Info',
+                            'message': 'No guest information to sync or guest information is already up to date.',
+                            'type': 'info',
+                            'sticky': False,
+                        }
+                    }
+            else:
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': 'Warning',
+                        'message': 'No car booking linked to this trip profile.',
+                        'type': 'warning',
+                        'sticky': False,
+                    }
+                }
 
 class TripCancellationWizard(models.TransientModel):
     _name = 'trip.cancellation.wizard'
@@ -1857,7 +2053,12 @@ class TripVehicleLine(models.Model):
     quantity = fields.Float(string='Quantity', default=1.0)  # Add missing quantity field
     price_unit = fields.Float(string='Price Unit', default=0.0)  # Add missing price_unit field
     unit_price = fields.Float(string='Unit Price')
-    amount = fields.Float(string='Amount')
+    amount = fields.Float(
+        string='Amount',
+        compute='_compute_amount',
+        store=True,
+        help='Amount calculated as unit_price * qty + extra_hour_charges * extra_hour'
+    )
 
     car_booking_line_id = fields.Many2one('car.booking.line', string='Car Booking Line', copy=False)
     
@@ -1932,6 +2133,8 @@ class TripVehicleLine(models.Model):
         string='Extra Hour Charges',
         help="Extra Hour Charges"
     )
+    
+
 
     driver_name = fields.Many2one(
         'res.partner',
@@ -2070,10 +2273,16 @@ class TripVehicleLine(models.Model):
     def _compute_duration(self):
         for record in self:
             if record.start_date and record.end_date:
-                delta = record.end_date.date() - record.start_date.date()
-                record.duration = float(delta.days) + 1.0
+                # Convert datetime to date for proper calculation
+                start_date = record.start_date.date()
+                end_date = record.end_date.date()
+                delta = end_date - start_date
+                # Ensure duration is non-negative and add 1 for inclusive counting
+                record.duration = max(delta.days + 1, 1)
             else:
                 record.duration = 0.0
+    
+
 
     @api.depends('kilometer_in', 'kilometer_out')
     def _compute_kilometer_difference(self):
@@ -2082,6 +2291,31 @@ class TripVehicleLine(models.Model):
                 record.kilometer_difference = record.kilometer_in - record.kilometer_out
             else:
                 record.kilometer_difference = 0.0
+    
+    @api.depends('unit_price', 'qty', 'extra_hour_charges', 'extra_hour')
+    def _compute_amount(self):
+        """Compute amount as unit_price * qty + extra_hour_charges * extra_hour"""
+        for record in self:
+            unit_price = record.unit_price or 0.0
+            qty = record.qty or 1.0
+            extra_hour_charges = record.extra_hour_charges or 0.0
+            extra_hour = record.extra_hour or 0
+            
+            # Calculate base amount: unit_price * qty
+            base_amount = unit_price * qty
+            
+            # Calculate extra hour amount: extra_hour_charges * extra_hour
+            extra_amount = extra_hour_charges * extra_hour
+            
+            # Total amount
+            record.amount = base_amount + extra_amount
+            
+            print(f"DEBUG: Trip vehicle line amount calculation:")
+            print(f"DEBUG: unit_price={unit_price}, qty={qty}")
+            print(f"DEBUG: extra_hour_charges={extra_hour_charges}, extra_hour={extra_hour}")
+            print(f"DEBUG: base_amount={base_amount}, extra_amount={extra_amount}")
+            print(f"DEBUG: total_amount={record.amount}")
+            print(f"DEBUG: Formula: ({unit_price} × {qty}) + ({extra_hour_charges} × {extra_hour}) = {record.amount}")
     
     @api.onchange('vehicle_id')
     def _onchange_vehicle_id(self):
