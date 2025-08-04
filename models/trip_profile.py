@@ -798,6 +798,25 @@ class TripProfile(models.Model):
         
         print(f"DEBUG: Creating new trip profile for booking: {booking.name}")
         
+        # Force save the booking first to ensure all data is persisted
+        booking = self.env['car.booking'].browse(booking.id)
+        booking._invalidate_cache()
+        
+        # Ensure car booking lines are saved and have service types
+        for booking_line in booking.car_booking_lines:
+            if not booking_line.type_of_service_id:
+                print(f"DEBUG: Booking line {booking_line.id} has no type_of_service_id, setting default")
+                # Try to set a default service type
+                default_service = self.env['type.of.service'].search([], limit=1)
+                if default_service:
+                    booking_line.type_of_service_id = default_service.id
+                    print(f"DEBUG: Set default service type: {default_service.name}")
+        
+        # Force save the booking lines
+        # Try to compute amounts if method exists
+        if hasattr(booking.car_booking_lines, '_compute_amount_values'):
+            booking.car_booking_lines._compute_amount_values()
+        
         # Create trip profile with booking data - set region first to avoid domain issues
         trip_vals = {
             'booking_id': booking.id,
@@ -820,6 +839,7 @@ class TripProfile(models.Model):
             'business_type': booking.business_type,
             'customer_name': booking.customer_name.id if booking.customer_name else False,
             'guest_name': booking.guest_name.id if booking.guest_name else False,
+            'guest_id': booking.guest_name.id if booking.guest_name else False,  # Set main guest field
             'payment_type': booking.payment_type,
             'date_of_service': booking.date_of_service,
             'notes': booking.notes,
@@ -872,6 +892,7 @@ class TripProfile(models.Model):
                 'mobile_no': booking_line.mobile_no if hasattr(booking_line, 'mobile_no') else '',
                 'id_no': booking_line.id_no if hasattr(booking_line, 'id_no') else '',
                 'car_booking_line_id': booking_line.id,  # Link to car booking line
+                'guest_ids': [(6, 0, booking_line.guest_ids.ids if booking_line.guest_ids else [])],  # Copy guest information
                 'notes': '',
             }
             
@@ -880,6 +901,7 @@ class TripProfile(models.Model):
             print(f"DEBUG: service_type_id: {booking_line.type_of_service_id.id if booking_line.type_of_service_id else 'None'}")
             print(f"DEBUG: car_booking_line_reference: {booking_line.id}")
             print(f"DEBUG: car_booking_line_id: {booking_line.id}")
+            print(f"DEBUG: guest_ids: {booking_line.guest_ids.ids if booking_line.guest_ids else 'None'}")
             
             # Ensure service_type_id is properly set
             if booking_line.type_of_service_id:
@@ -1679,6 +1701,72 @@ class TripProfile(models.Model):
             }
         }
 
+    @api.model
+    def create_from_booking_with_save(self, booking):
+        """Create a trip profile from a car booking with forced save"""
+        print(f"DEBUG: create_from_booking_with_save called with booking: {booking.name if booking else 'None'}")
+        if not booking:
+            print("DEBUG: No booking provided")
+            raise UserError("No booking provided")
+        
+        # Check if trip profile already exists for this booking
+        existing_trip = self.search([('booking_id', '=', booking.id)], limit=1)
+        if existing_trip:
+            print(f"DEBUG: Existing trip profile found: {existing_trip.name}")
+            return existing_trip
+        
+        print(f"DEBUG: Creating new trip profile for booking: {booking.name}")
+        
+        # Force save the booking and all its lines
+        booking = self.env['car.booking'].browse(booking.id)
+        
+        # Ensure all car booking lines are saved
+        for booking_line in booking.car_booking_lines:
+            if not booking_line.type_of_service_id:
+                print(f"DEBUG: Booking line {booking_line.id} missing type_of_service_id")
+                
+                # Try to find appropriate service type based on booking context
+                service_type = None
+                
+                # First try to find by booking type
+                if booking.booking_type == 'with_driver':
+                    service_type = self.env['type.of.service'].search([
+                        '|', ('name', 'ilike', 'transfer'),
+                        ('name', 'ilike', 'with driver')
+                    ], limit=1)
+                elif booking.booking_type == 'rental':
+                    service_type = self.env['type.of.service'].search([
+                        '|', ('name', 'ilike', 'rental'),
+                        ('name', 'ilike', 'without driver')
+                    ], limit=1)
+                
+                # If not found by booking type, try to find by product
+                if not service_type and booking_line.product_id:
+                    service_type = self.env['type.of.service'].search([
+                        ('name', 'ilike', booking_line.product_id.name)
+                    ], limit=1)
+                
+                # If still not found, get the first available service type
+                if not service_type:
+                    service_type = self.env['type.of.service'].search([], limit=1)
+                
+                if service_type:
+                    booking_line.type_of_service_id = service_type.id
+                    print(f"DEBUG: Set service type for booking line {booking_line.id}: {service_type.name}")
+                else:
+                    print(f"DEBUG: No service type found for booking line {booking_line.id}")
+        
+        # Force save all booking lines
+        # Try to compute amounts if method exists
+        if hasattr(booking.car_booking_lines, '_compute_amount_values'):
+            booking.car_booking_lines._compute_amount_values()
+        
+        # Force a write to ensure everything is saved
+        booking.write({})
+        
+        # Now create the trip profile
+        return self.create_from_booking(booking)
+
 class TripCancellationWizard(models.TransientModel):
     _name = 'trip.cancellation.wizard'
     _description = 'Trip Cancellation Confirmation'
@@ -1904,6 +1992,70 @@ class TripVehicleLine(models.Model):
 
     guest_ids = fields.Many2many(
         'res.partner')
+    
+    # Computed fields for dashboard
+    trip_status = fields.Selection(
+        related='trip_id.trip_status',
+        string='Trip Status',
+        store=True,
+        readonly=True
+    )
+    
+    trip_type = fields.Selection(
+        related='trip_id.trip_type',
+        string='Trip Type',
+        store=True,
+        readonly=True
+    )
+    
+    service_type = fields.Selection(
+        related='trip_id.service_type',
+        string='Service Type',
+        store=True,
+        readonly=True
+    )
+    
+    customer_name = fields.Many2one(
+        related='trip_id.customer_name',
+        string='Customer',
+        store=True,
+        readonly=True
+    )
+    
+    guest_name = fields.Many2one(
+        related='trip_id.guest_name',
+        string='Guest',
+        store=True,
+        readonly=True
+    )
+    
+    region = fields.Selection(
+        related='trip_id.region',
+        string='Region',
+        store=True,
+        readonly=True
+    )
+    
+    city = fields.Many2one(
+        related='trip_id.city',
+        string='City',
+        store=True,
+        readonly=True
+    )
+    
+    location_from = fields.Char(
+        related='trip_id.location_from',
+        string='Location From',
+        store=True,
+        readonly=True
+    )
+    
+    location_to = fields.Char(
+        related='trip_id.location_to',
+        string='Location To',
+        store=True,
+        readonly=True
+    )
 
     @api.depends('start_date', 'end_date')
     def _compute_total_hours(self):
@@ -1979,6 +2131,46 @@ class TripVehicleLine(models.Model):
             'res_id': checklist.id,
             'target': 'new',
         }
+    
+    def action_view_trip(self):
+        """Open the related trip profile"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Trip Profile',
+            'res_model': 'trip.profile',
+            'view_mode': 'form',
+            'res_id': self.trip_id.id,
+            'target': 'current',
+        }
+    
+    def action_view_car_booking_line(self):
+        """Open the related car booking line"""
+        self.ensure_one()
+        if self.car_booking_line_id:
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Car Booking Line',
+                'res_model': 'car.booking.line',
+                'view_mode': 'form',
+                'res_id': self.car_booking_line_id.id,
+                'target': 'current',
+            }
+        return False
+    
+    def action_view_trip_from_list(self):
+        """Open the trip profile when clicking on trip_id in list view"""
+        self.ensure_one()
+        if self.trip_id:
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Trip Profile',
+                'res_model': 'trip.profile',
+                'view_mode': 'form',
+                'res_id': self.trip_id.id,
+                'target': 'current',
+            }
+        return False
 
     # @api.depends('vehicle_ids')
     # def _compute_used_quantity(self):

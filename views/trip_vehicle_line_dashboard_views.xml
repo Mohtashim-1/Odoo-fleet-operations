@@ -1,0 +1,291 @@
+<odoo>
+    <!-- 
+      This is the Trip Vehicle Line Dashboard view.
+      It contains all relevant fields for trip vehicle line management.
+      The 'optional="show"' attribute allows users to hide/show columns as needed.
+    -->
+    <record id="view_trip_vehicle_line_tree_dashboard" model="ir.ui.view">
+        <field name="name">trip.vehicle.line.tree.dashboard</field>
+        <field name="model">trip.vehicle.line</field>
+        <field name="arch" type="xml">
+            <list string="Trip Vehicle Line Dashboard" create="false">
+                <!-- Trip Information -->
+                <field name="trip_id" optional="show" decoration-info="1" widget="many2one"/>
+                <field name="name" optional="show"/>
+                <field name="trip_status" optional="show"/>
+                <field name="trip_type" optional="show"/>
+                <field name="service_type" optional="show"/>
+                
+                <!-- Vehicle Information -->
+                <field name="vehicle_id" optional="show"/>
+               
+                <field name="car_model_id" optional="show"/>
+                <field name="car_year" optional="show"/>
+                
+                <!-- Driver Information -->
+                <field name="driver_name" optional="show"/>
+                <field name="mobile_no" optional="show"/>
+                <field name="id_no" optional="show"/>
+                
+                <!-- Service Information -->
+                <field name="service_type_id" optional="show"/>
+                
+                <!-- Dates and Duration -->
+                <field name="start_date" optional="show"/>
+                <field name="end_date" optional="show"/>
+                <field name="delivery_date" optional="show"/>
+                <field name="expected_return_date" optional="show"/>
+                <field name="duration" optional="show"/>
+                <field name="total_hours" optional="show"/>
+                
+                <!-- Quantity and Pricing -->
+                <field name="qty" optional="show"/>
+                <field name="quantity" optional="show"/>
+                <field name="price_unit" optional="show"/>
+                <field name="unit_price" optional="show"/>
+                <field name="amount" optional="show"/>
+                
+                <!-- Extra Charges -->
+                <field name="extra_hour" optional="show"/>
+                <field name="extra_hour_charges" optional="show"/>
+                
+                <!-- Kilometer Information -->
+                <field name="kilometer_in" optional="show"/>
+                <field name="kilometer_out" optional="show"/>
+                <field name="kilometer_difference" optional="show"/>
+                
+                <!-- Customer &amp; Guest Information -->
+                <field name="customer_name" optional="show"/>
+                <field name="guest_name" optional="show"/>
+                <field name="guest_ids" widget="many2many_tags" optional="show"/>
+                
+                <!-- Location Information -->
+                <field name="region" optional="show"/>
+                <field name="city" optional="show"/>
+                <field name="location_from" optional="show"/>
+                <field name="location_to" optional="show"/>
+                
+                <!-- Car Booking Reference -->
+                <field name="car_booking_line_id" optional="show"/>
+                
+                <!-- Notes -->
+                <field name="notes" optional="hide"/>
+                
+                <!-- Creation Information -->
+                <field name="create_uid" optional="show"/>
+                <field name="create_date" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search View for Trip Vehicle Line Dashboard -->
+    <record id="view_trip_vehicle_line_search_dashboard" model="ir.ui.view">
+        <field name="name">trip.vehicle.line.search.dashboard</field>
+        <field name="model">trip.vehicle.line</field>
+        <field name="arch" type="xml">
+            <search string="Search Trip Vehicle Lines">
+                <field name="trip_id"/>
+                <field name="name"/>
+                <field name="trip_status"/>
+                <field name="trip_type"/>
+                <field name="service_type"/>
+                <field name="vehicle_id"/>
+                <field name="driver_name"/>
+                <field name="service_type_id"/>
+                <field name="product_id"/>
+                <field name="customer_name"/>
+                <field name="guest_name"/>
+                <field name="region"/>
+                <field name="city"/>
+                <field name="car_booking_line_id"/>
+                <field name="create_uid"/>
+                
+                <filter string="Sedan" name="sedan" domain="[('vehicle_type', '=', 'sedan')]"/>
+                <filter string="SUV" name="suv" domain="[('vehicle_type', '=', 'suv')]"/>
+                <filter string="Van" name="van" domain="[('vehicle_type', '=', 'van')]"/>
+                <filter string="Other" name="other" domain="[('vehicle_type', '=', 'other')]"/>
+                
+                <filter string="With Driver" name="with_driver" domain="[('driver_name', '!=', False)]"/>
+                <filter string="Without Driver" name="without_driver" domain="[('driver_name', '=', False)]"/>
+                
+                <filter string="Confirmed" name="confirmed" domain="[('trip_status', '=', 'confirm')]"/>
+                <filter string="Scheduled" name="scheduled" domain="[('trip_status', '=', 'scheduled')]"/>
+                <filter string="Departed" name="departed" domain="[('trip_status', '=', 'departed')]"/>
+                <filter string="Completed" name="completed" domain="[('trip_status', '=', 'completed')]"/>
+                <filter string="Cancelled" name="cancelled" domain="[('trip_status', '=', 'cancelled')]"/>
+                
+                <filter string="Individual Trips" name="individual" domain="[('trip_type', '=', 'individual')]"/>
+                <filter string="Contract Trips" name="contract" domain="[('trip_type', '=', 'contract')]"/>
+                
+                <filter string="With Driver Service" name="with_driver_service" domain="[('service_type', '=', 'with_driver')]"/>
+                <filter string="Without Driver Service" name="without_driver_service" domain="[('service_type', '=', 'without_driver')]"/>
+                
+                <filter string="This Week" name="this_week" domain="[('start_date', '&gt;=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <filter string="This Month" name="this_month" domain="[('start_date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter string="Trip" name="group_trip" context="{'group_by': 'trip_id'}"/>
+                    <filter string="Trip Status" name="group_trip_status" context="{'group_by': 'trip_status'}"/>
+                    <filter string="Trip Type" name="group_trip_type" context="{'group_by': 'trip_type'}"/>
+                    <filter string="Service Type" name="group_service_type" context="{'group_by': 'service_type'}"/>
+                    <filter string="Vehicle Type" name="group_vehicle_type" context="{'group_by': 'vehicle_type'}"/>
+                    <filter string="Driver" name="group_driver" context="{'group_by': 'driver_name'}"/>
+                    <filter string="Customer" name="group_customer" context="{'group_by': 'customer_name'}"/>
+                    <filter string="Region" name="group_region" context="{'group_by': 'region'}"/>
+                    <filter string="City" name="group_city" context="{'group_by': 'city'}"/>
+                    <filter string="Service Type Detail" name="group_service_type_detail" context="{'group_by': 'service_type_id'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Car Booking Line" name="group_car_booking_line" context="{'group_by': 'car_booking_line_id'}"/>
+                    <filter string="Created By" name="group_create_uid" context="{'group_by': 'create_uid'}"/>
+                    <filter string="Start Date" name="group_start_date" context="{'group_by': 'start_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Form View for Trip Vehicle Line Dashboard -->
+    <record id="view_trip_vehicle_line_form_dashboard" model="ir.ui.view">
+        <field name="name">trip.vehicle.line.form.dashboard</field>
+        <field name="model">trip.vehicle.line</field>
+        <field name="arch" type="xml">
+            <form string="Trip Vehicle Line">
+                <header>
+                    <button name="action_view_trip" 
+                            type="object" 
+                            string="View Trip" 
+                            class="btn-primary"
+                            invisible="not trip_id"/>
+                    <button name="action_view_car_booking_line" 
+                            type="object" 
+                            string="View Car Booking Line" 
+                            class="btn-secondary"
+                            invisible="not car_booking_line_id"/>
+                    <button name="action_open_checklist" 
+                            type="object" 
+                            string="Open Checklist" 
+                            class="btn-info"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Trip Information">
+                            <field name="trip_id"/>
+                            <field name="name"/>
+                            <field name="trip_status"/>
+                            <field name="trip_type"/>
+                            <field name="service_type"/>
+                        </group>
+                        <group string="Vehicle Information">
+                            <field name="vehicle_id"/>
+                            <field name="car_model_id"/>
+                            <field name="car_year"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="Driver Information">
+                            <field name="driver_name"/>
+                            <field name="mobile_no"/>
+                            <field name="id_no"/>
+                        </group>
+                        <group string="Service Information">
+                            <field name="service_type_id"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="Customer &amp; Guest">
+                            <field name="customer_name"/>
+                            <field name="guest_name"/>
+                            <field name="guest_ids" widget="many2many_tags"/>
+                        </group>
+                        <group string="Location">
+                            <field name="region"/>
+                            <field name="city"/>
+                            <field name="location_from"/>
+                            <field name="location_to"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="Dates">
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="delivery_date"/>
+                            <field name="expected_return_date"/>
+                        </group>
+                        <group string="Duration &amp; Hours">
+                            <field name="duration"/>
+                            <field name="total_hours"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="Quantity &amp; Pricing">
+                            <field name="qty"/>
+                            <field name="quantity"/>
+                            <field name="price_unit"/>
+                            <field name="unit_price"/>
+                            <field name="amount"/>
+                        </group>
+                        <group string="Extra Charges">
+                            <field name="extra_hour"/>
+                            <field name="extra_hour_charges"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="Kilometer Information">
+                            <field name="kilometer_in"/>
+                            <field name="kilometer_out"/>
+                            <field name="kilometer_difference"/>
+                        </group>
+                        <group string="Guest Information">
+                            <field name="guest_ids" widget="many2many_tags"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="Car Booking Reference">
+                            <field name="car_booking_line_id"/>
+                        </group>
+                        <group string="Creation Info">
+                            <field name="create_uid"/>
+                            <field name="create_date"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <field name="notes" placeholder="Add any notes for this vehicle line..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Trip Vehicle Line Dashboard -->
+    <record id="action_trip_vehicle_line_dashboard" model="ir.actions.act_window">
+        <field name="name">Trip Vehicle Line Dashboard</field>
+        <field name="res_model">trip.vehicle.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_trip_vehicle_line_tree_dashboard"/>
+        <field name="search_view_id" ref="view_trip_vehicle_line_search_dashboard"/>
+        <field name="views" eval="[(ref('view_trip_vehicle_line_tree_dashboard'), 'list'),
+                                   (ref('view_trip_vehicle_line_form_dashboard'), 'form')]"/>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                No trip vehicle lines found.
+            </p>
+            <p>
+                Trip vehicle lines are created when you add vehicles to trip profiles.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item for Trip Vehicle Line Dashboard -->
+    <menuitem id="menu_trip_vehicle_line_dashboard"
+              name="Trip Line Dashboard"
+              parent="fleet_operations.menu_trip_profile_root"
+              action="action_trip_vehicle_line_dashboard"
+              sequence="20"/>
+
+</odoo> 

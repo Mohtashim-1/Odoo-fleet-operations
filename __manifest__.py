@@ -42,6 +42,7 @@
     'views/warehouse_profile_views.xml',
     'views/system_integration_views.xml',
     'views/trip_vehicle_line_checklist_view.xml',
+    'views/trip_vehicle_line_dashboard_views.xml',
 
     # 🔁 Load this last (was causing the issue)
     'views/operation_point_views.xml',
