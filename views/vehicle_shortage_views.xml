@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vehicle Shortage Form View -->
+    <record id="view_vehicle_shortage_form" model="ir.ui.view">
+        <field name="name">vehicle.shortage.form</field>
+        <field name="model">vehicle.shortage</field>
+        <field name="arch" type="xml">
+            <form string="Vehicle Shortage Request">
+                <header>
+                    <button name="action_submit" string="Submit" type="object" class="oe_highlight" invisible="status != 'draft'"/>
+                    <button name="action_approve" string="Approve" type="object" class="oe_highlight" invisible="status != 'pending'"/>
+                    <button name="action_reject" string="Reject" type="object" invisible="status != 'pending'"/>
+                    <button name="action_resolve" string="Resolve" type="object" class="oe_highlight" invisible="status != 'approved'"/>
+                    <field name="status" widget="statusbar" clickable="True"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Request Details">
+                            <field name="trip_id" context="{'form_view_ref': 'trip_profile_form'}"/>
+                            <field name="contract_id" context="{'form_view_ref': 'sale.view_order_form'}"/>
+                            <field name="vehicle_type"/>
+                            <field name="requested_quantity"/>
+                            <field name="available_quantity" readonly="1"/>
+                            <field name="shortage_quantity" readonly="1"/>
+                        </group>
+                        <group string="Operation Details">
+                            <field name="request_date"/>
+                            <field name="warehouse_id" context="{'form_view_ref': 'warehouse_profile_form'}"/>
+                            <field name="operation_point_id" context="{'form_view_ref': 'operation_point_form'}"/>
+                            <field name="driver_shortage"/>
+                        </group>
+                    </group>
+                    <group string="Resolution">
+                        <field name="resolution_action"/>
+                        <field name="alternative_vehicle_type" invisible="resolution_action != 'alternative_vehicle'"/>
+                        <field name="transfer_warehouse_id" context="{'form_view_ref': 'warehouse_profile_form'}" invisible="resolution_action != 'inter_branch_transfer'"/>
+                        <field name="notes" placeholder="Add any resolution notes..."/>
+                    </group>
+                </sheet>
+                 <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vehicle Shortage Tree View -->
+    <record id="view_vehicle_shortage_tree" model="ir.ui.view">
+        <field name="name">vehicle.shortage.tree</field>
+        <field name="model">vehicle.shortage</field>
+        <field name="arch" type="xml">
+            <list string="Vehicle Shortage Requests">
+                <field name="name"/>
+                <field name="trip_id"/>
+                <field name="contract_id"/>
+                <field name="vehicle_type"/>
+                <field name="requested_quantity"/>
+                <field name="available_quantity"/>
+                <field name="shortage_quantity"/>
+                <field name="driver_shortage"/>
+                <field name="request_date"/>
+                <field name="warehouse_id"/>
+                <field name="operation_point_id"/>
+                <field name="status"/>
+                <field name="resolution_action"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vehicle Shortage Kanban View -->
+    <record id="view_vehicle_shortage_kanban" model="ir.ui.view">
+        <field name="name">vehicle.shortage.kanban</field>
+        <field name="model">vehicle.shortage</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="trip_id"/>
+                <field name="vehicle_type"/>
+                <field name="requested_quantity"/>
+                <field name="shortage_quantity"/>
+                <field name="driver_shortage"/>
+                <field name="request_date"/>
+                <field name="warehouse_id"/>
+                <field name="operation_point_id"/>
+                <field name="status"/>
+                <field name="resolution_action"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <div class="oe_kanban_details">
+                                <strong><field name="name"/></strong><br/>
+                                <span>Trip: <field name="trip_id"/></span><br/>
+                                <span>Vehicle Type: <field name="vehicle_type"/></span><br/>
+                                <span>Requested: <field name="requested_quantity"/></span><br/>
+                                <span>Shortage: <field name="shortage_quantity"/></span><br/>
+                                <span>Driver Shortage: <field name="driver_shortage"/></span><br/>
+                                <span>Warehouse: <field name="warehouse_id"/></span><br/>
+                                <span>Status: <field name="status"/></span><br/>
+                                <span>Resolution: <field name="resolution_action"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Vehicle Shortage Search View -->
+    <record id="view_vehicle_shortage_search" model="ir.ui.view">
+        <field name="name">vehicle.shortage.search</field>
+        <field name="model">vehicle.shortage</field>
+        <field name="arch" type="xml">
+            <search string="Vehicle Shortage Requests">
+                <field name="name"/>
+                <field name="trip_id"/>
+                <field name="contract_id"/>
+                <field name="warehouse_id"/>
+                <field name="operation_point_id"/>
+                <filter string="Draft" name="draft" domain="[('status', '=', 'draft')]"/>
+                <filter string="Pending" name="pending" domain="[('status', '=', 'pending')]"/>
+                <filter string="Approved" name="approved" domain="[('status', '=', 'approved')]"/>
+                <filter string="Rejected" name="rejected" domain="[('status', '=', 'rejected')]"/>
+                <filter string="Resolved" name="resolved" domain="[('status', '=', 'resolved')]"/>
+                <filter string="With Driver Shortage" name="driver_shortage" domain="[('driver_shortage', '>', 0)]"/>
+                <group expand="1" string="Group By">
+                    <filter name="vehicle_type" string="Vehicle Type" context="{'group_by': 'vehicle_type'}"/>
+                    <filter name="status" string="Status" context="{'group_by': 'status'}"/>
+                    <filter name="resolution_action" string="Resolution Action" context="{'group_by': 'resolution_action'}"/>
+                    <filter name="warehouse_id" string="Warehouse" context="{'group_by': 'warehouse_id'}"/>
+                    <filter name="operation_point_id" string="Operation Point" context="{'group_by': 'operation_point_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action for Vehicle Shortage -->
+    <record id="action_vehicle_shortage" model="ir.actions.act_window">
+        <field name="name">Vehicle Shortage Requests</field>
+        <field name="res_model">vehicle.shortage</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_vehicle_shortage_search"/>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Create your first vehicle shortage request.
+            </p>
+            <p>
+                Manage vehicle and driver shortages, track resolutions, and coordinate with warehouses and operation points.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <!-- <menuitem id="menu_vehicle_shortage_root"
+              name="Shortage Management"
+              sequence="60"/> -->
+    <menuitem id="menu_vehicle_shortage"
+              name="Vehicle Shortages"
+              parent="fleet_operations.menu_vehicle_receipt_delivery_root"
+              action="action_vehicle_shortage"
+              sequence="10"/>
+</odoo>

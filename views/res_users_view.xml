@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Inherit User Form View to Add Fleet Operations Checkbox -->
+        <record id="view_users_form_fleet_operations" model="ir.ui.view">
+            <field name="name">res.users.form.fleet.operations</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='access_rights']" position="inside">
+                    <group string="Fleet Operations" name="fleet_operations_settings">
+                        <field name="show_fleet_operations" 
+                               string="Show Fleet Operations Menu"
+                               help="Check this box to show Fleet Operations menu to this user"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+        
+    </data>
+</odoo> 

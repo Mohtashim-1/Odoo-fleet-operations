@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- System Integration Form View -->
+    <record id="view_system_integration_form" model="ir.ui.view">
+        <field name="name">system.integration.form</field>
+        <field name="model">system.integration</field>
+        <field name="arch" type="xml">
+            <form string="System Integration">
+                <header>
+                    <button name="action_sync_data" string="Sync Data" type="object" class="oe_highlight" invisible="status == 'error'"/>
+                    <field name="status" widget="statusbar" clickable="True"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Enter integration name..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Integration Details">
+                            <field name="system_type" widget="radio"/>
+                            <field name="api_url" widget="url" placeholder="Enter API URL..."/>
+                            <field name="api_key" widget="password" placeholder="Enter API key..."/>
+                            <field name="last_sync_date" readonly="1"/>
+                        </group>
+                        <group string="Status">
+                            <field name="status" readonly="1"/>
+                            <field name="error_message" readonly="1" invisible="status != 'error'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Sync Logs">
+                            <field name="sync_log_ids">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="result"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- System Integration Tree View -->
+    <record id="view_system_integration_tree" model="ir.ui.view">
+        <field name="name">system.integration.tree</field>
+        <field name="model">system.integration</field>
+        <field name="arch" type="xml">
+            <list string="System Integrations">
+                <field name="name"/>
+                <field name="system_type"/>
+                <field name="api_url"/>
+                <field name="last_sync_date"/>
+                <field name="status"/>
+                <field name="error_message"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- System Integration Kanban View -->
+    <record id="view_system_integration_kanban" model="ir.ui.view">
+        <field name="name">system.integration.kanban</field>
+        <field name="model">system.integration</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="system_type"/>
+                <field name="api_url"/>
+                <field name="last_sync_date"/>
+                <field name="status"/>
+                <field name="error_message"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <div class="oe_kanban_details">
+                                <strong><field name="name"/></strong><br/>
+                                <span>Type: <field name="system_type"/></span><br/>
+                                <span>API URL: <field name="api_url"/></span><br/>
+                                <span>Last Sync: <field name="last_sync_date"/></span><br/>
+                                <span>Status: <field name="status"/></span><br/>
+                                <span t-if="record.status.raw_value === 'error'">Error: <field name="error_message"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- System Integration Search View -->
+    <record id="view_system_integration_search" model="ir.ui.view">
+        <field name="name">system.integration.search</field>
+        <field name="model">system.integration</field>
+        <field name="arch" type="xml">
+            <search string="System Integrations">
+                <field name="name"/>
+                <field name="api_url"/>
+                <filter string="Active" name="active" domain="[('status', '=', 'active')]"/>
+                <filter string="Inactive" name="inactive" domain="[('status', '=', 'inactive')]"/>
+                <filter string="Error" name="error" domain="[('status', '=', 'error')]"/>
+                <filter string="Najm" name="najm" domain="[('system_type', '=', 'najm')]"/>
+                <filter string="Absher" name="absher" domain="[('system_type', '=', 'absher')]"/>
+                <filter string="Insurance" name="insurance" domain="[('system_type', '=', 'insurance')]"/>
+                <group expand="1" string="Group By">
+                    <filter name="system_type" string="System Type" context="{'group_by': 'system_type'}"/>
+                    <filter name="status" string="Status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- System Integration Log Form View -->
+    <record id="view_system_integration_log_form" model="ir.ui.view">
+        <field name="name">system.integration.log.form</field>
+        <field name="model">system.integration.log</field>
+        <field name="arch" type="xml">
+            <form string="System Integration Log">
+                <sheet>
+                    <group>
+                        <field name="integration_id" readonly="1"/>
+                        <field name="date" readonly="1"/>
+                        <field name="result" readonly="1"/>
+                        <field name="message" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for System Integration -->
+    <record id="action_system_integration" model="ir.actions.act_window">
+        <field name="name">System Integrations</field>
+        <field name="res_model">system.integration</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_system_integration_search"/>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Create your first system integration.
+            </p>
+            <p>
+                Manage integrations with external systems like Najm, Absher, and Insurance platforms to sync vehicle and accident data.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_system_integration_root"
+              name="Integrations"
+              sequence="70"/>
+    <menuitem id="menu_system_integration"
+              name="System Integrations"
+              parent="menu_system_integration_root"
+              action="action_system_integration"
+              sequence="10"/>
+</odoo>

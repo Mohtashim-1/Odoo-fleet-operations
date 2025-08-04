@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Fleet Operations User Group -->
+        <record id="group_fleet_operations_user" model="res.groups">
+            <field name="name">Fleet Operations User</field>
+            <field name="comment">Users can create and manage trip profiles but cannot delete them or manage master data.</field>
+        </record>
+        
+        <!-- Fleet Operations Manager Group -->
+        <record id="group_fleet_operations_manager" model="res.groups">
+            <field name="name">Fleet Operations Manager</field>
+            <field name="comment">Managers have full access to fleet operations module including master data management.</field>
+            <field name="implied_ids" eval="[(4, ref('group_fleet_operations_user'))]"/>
+        </record>
+        
+
+        
+    </data>
+</odoo> 

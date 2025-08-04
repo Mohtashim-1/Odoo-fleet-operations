@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vehicle Receipt/Delivery Form View -->
+    <record id="view_vehicle_receipt_delivery_form" model="ir.ui.view">
+        <field name="name">vehicle.receipt.delivery.form</field>
+        <field name="model">vehicle.receipt.delivery</field>
+        <field name="arch" type="xml">
+            <form string="Vehicle Receipt/Delivery">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object" class="oe_highlight" invisible="state in ['confirmed', 'done', 'cancelled']"/>
+                    <button name="action_done" string="Mark as Done" type="object" class="oe_highlight" invisible="state != 'confirmed'"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="state in ['done', 'cancelled']"/>
+                    <field name="state" widget="statusbar" clickable="True"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Details">
+                            <field name="type" widget="radio"/>
+                            <field name="vehicle_id" context="{'form_view_ref': 'vehicle_profile_form'}"/>
+                            <field name="contract_id" context="{'form_view_ref': 'sale.view_order_form'}"/>
+                            <field name="client_name"/>
+                        </group>
+                        <group string="Operation">
+                            <field name="location"/>
+                            <field name="staff_id" context="{'form_view_ref': 'hr.view_employee_form'}"/>
+                            <field name="datetime"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Inspection">
+                            <group>
+                                <group string="Condition">
+                                    <field name="body_condition"/>
+                                    <field name="tire_condition"/>
+                                    <field name="glass_lights_condition"/>
+                                    <field name="cleanliness"/>
+                                </group>
+                                <group string="Metrics">
+                                    <field name="odometer_reading" widget="float"/>
+                                    <field name="fuel_level"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Documents">
+                            <group>
+                                <field name="vehicle_photos" widget="many2many_binary"/>
+                                <field name="odometer_photo" widget="attachment"/>
+                                <field name="fuel_level_photo" widget="attachment"/>
+                                <field name="accident_report" widget="attachment"/>
+                                <field name="maintenance_report" widget="attachment"/>
+                                <field name="receipt_form" widget="attachment"/>
+                                <field name="pre_delivery_inspection_report" widget="attachment" invisible="type != 'delivery'"/>
+                            </group>
+                        </page>
+                        <page string="Accident Details">
+                            <group>
+                                <field name="accident_reported"/>
+                                <field name="traffic_report" widget="attachment"/>
+                                <field name="legal_notified"/>
+                            </group>
+                        </page>
+                        <page string="Delivery Details" invisible="type != 'delivery'">
+                            <group>
+                                <field name="documentation_complete"/>
+                            </group>
+                        </page>
+                        <page string="Signature">
+                            <group>
+                                <field name="signature" widget="signature"/>
+                                <field name="signature_date"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vehicle Receipt/Delivery Tree View -->
+    <record id="view_vehicle_receipt_delivery_tree" model="ir.ui.view">
+        <field name="name">vehicle.receipt.delivery.tree</field>
+        <field name="model">vehicle.receipt.delivery</field>
+        <field name="arch" type="xml">
+            <list string="Vehicle Receipts/Deliveries">
+                <field name="name"/>
+                <field name="type"/>
+                <field name="vehicle_id"/>
+                <field name="contract_id"/>
+                <field name="client_name"/>
+                <field name="location"/>
+                <field name="staff_id"/>
+                <field name="datetime"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vehicle Receipt/Delivery Kanban View -->
+    <record id="view_vehicle_receipt_delivery_kanban" model="ir.ui.view">
+        <field name="name">vehicle.receipt.delivery.kanban</field>
+        <field name="model">vehicle.receipt.delivery</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="type"/>
+                <field name="vehicle_id"/>
+                <field name="client_name"/>
+                <field name="location"/>
+                <field name="staff_id"/>
+                <field name="datetime"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <div class="oe_kanban_details">
+                                <strong><field name="name"/></strong><br/>
+                                <span>Type: <field name="type"/></span><br/>
+                                <span>Vehicle: <field name="vehicle_id"/></span><br/>
+                                <span>Client: <field name="client_name"/></span><br/>
+                                <span>Location: <field name="location"/></span><br/>
+                                <span>Staff: <field name="staff_id"/></span><br/>
+                                <span>Date: <field name="datetime"/></span><br/>
+                                <span>Status: <field name="state"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Vehicle Receipt/Delivery Search View -->
+    <record id="view_vehicle_receipt_delivery_search" model="ir.ui.view">
+        <field name="name">vehicle.receipt.delivery.search</field>
+        <field name="model">vehicle.receipt.delivery</field>
+        <field name="arch" type="xml">
+            <search string="Vehicle Receipts/Deliveries">
+                <field name="name"/>
+                <field name="vehicle_id"/>
+                <field name="client_name"/>
+                <field name="staff_id"/>
+                <filter string="Receipts" name="receipt" domain="[('type', '=', 'receipt')]"/>
+                <filter string="Deliveries" name="delivery" domain="[('type', '=', 'delivery')]"/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Done" name="done" domain="[('state', '=', 'done')]"/>
+                <filter string="Cancelled" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <filter string="Accident Reported" name="accident_reported" domain="[('accident_reported', '=', True)]"/>
+                <group expand="1" string="Group By">
+                    <filter name="type" string="Type" context="{'group_by': 'type'}"/>
+                    <filter name="state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="vehicle_id" string="Vehicle" context="{'group_by': 'vehicle_id'}"/>
+                    <filter name="staff_id" string="Staff" context="{'group_by': 'staff_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action for Vehicle Receipts -->
+    <record id="action_vehicle_receipt" model="ir.actions.act_window">
+        <field name="name">Vehicle Receipts</field>
+        <field name="res_model">vehicle.receipt.delivery</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('type', '=', 'receipt')]</field>
+        <field name="context">{'default_type': 'receipt'}</field>
+        <field name="search_view_id" ref="view_vehicle_receipt_delivery_search"/>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Create your first vehicle receipt.
+            </p>
+            <p>
+                Manage vehicle receipts, track inspections, and upload documents.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action for Vehicle Deliveries -->
+    <record id="action_vehicle_delivery" model="ir.actions.act_window">
+        <field name="name">Vehicle Deliveries</field>
+        <field name="res_model">vehicle.receipt.delivery</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('type', '=', 'delivery')]</field>
+        <field name="context">{'default_type': 'delivery'}</field>
+        <field name="search_view_id" ref="view_vehicle_receipt_delivery_search"/>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Create your first vehicle delivery.
+            </p>
+            <p>
+                Manage vehicle deliveries, track inspections, and upload documents.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_vehicle_receipt_delivery_root"
+              name="Vehicle Operations"
+              sequence="40"/>
+    <menuitem id="menu_vehicle_receipt"
+              name="Receipts"
+              parent="menu_vehicle_receipt_delivery_root"
+              action="action_vehicle_receipt"
+              sequence="10"/>
+    <menuitem id="menu_vehicle_delivery"
+              name="Deliveries"
+              parent="menu_vehicle_receipt_delivery_root"
+              action="action_vehicle_delivery"
+              sequence="20"/>
+</odoo>

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Operations Dashboard Form View -->
+    <record id="view_operations_dashboard_form" model="ir.ui.view">
+        <field name="name">operations.dashboard.form</field>
+        <field name="model">operations.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Operations Dashboard">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Dashboard Details">
+                            <field name="date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Vehicle KPIs">
+                            <group>
+                                <field name="total_vehicles" readonly="1"/>
+                                <field name="ready_vehicles" readonly="1"/>
+                                <field name="under_maintenance_vehicles" readonly="1"/>
+                                <field name="out_of_service_vehicles" readonly="1"/>
+                                <field name="readiness_percentage" widget="percentage" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Trip KPIs">
+                            <group>
+                                <field name="trip_count" readonly="1"/>
+                                <field name="scheduled_trips" readonly="1"/>
+                                <field name="ongoing_trips" readonly="1"/>
+                                <field name="completed_trips" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Contract KPIs">
+                            <group>
+                                <field name="active_contracts" readonly="1"/>
+                                <field name="shortage_contracts" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Warehouse KPIs">
+                            <group>
+                                <field name="warehouse_vehicle_count" readonly="1"/>
+                                <field name="warehouse_distribution" readonly="1" widget="text"/>
+                            </group>
+                        </page>
+                        <page string="Operation Point KPIs">
+                            <group>
+                                <field name="operation_point_vehicle_count" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Receipt and Delivery KPIs">
+                            <group>
+                                <field name="ongoing_receipts_deliveries" readonly="1"/>
+                                <field name="avg_delivery_time" widget="float_time" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Alerts and Shortages">
+                            <group>
+                                <field name="shortage_requests" readonly="1"/>
+                                <field name="damage_alerts" readonly="1"/>
+                                <field name="alert_messages" readonly="1" widget="text"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Operations Dashboard Tree View -->
+    <record id="view_operations_dashboard_tree" model="ir.ui.view">
+        <field name="name">operations.dashboard.tree</field>
+        <field name="model">operations.dashboard</field>
+        <field name="arch" type="xml">
+            <list string="Operations Dashboards">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="total_vehicles"/>
+                <field name="ready_vehicles"/>
+                <field name="readiness_percentage" widget="percentage"/>
+                <field name="trip_count"/>
+                <field name="active_contracts"/>
+                <field name="shortage_requests"/>
+                <field name="damage_alerts"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Operations Dashboard Kanban View -->
+    <record id="view_operations_dashboard_kanban" model="ir.ui.view">
+        <field name="name">operations.dashboard.kanban</field>
+        <field name="model">operations.dashboard</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="total_vehicles"/>
+                <field name="ready_vehicles"/>
+                <field name="readiness_percentage"/>
+                <field name="trip_count"/>
+                <field name="scheduled_trips"/>
+                <field name="ongoing_trips"/>
+                <field name="completed_trips"/>
+                <field name="active_contracts"/>
+                <field name="shortage_contracts"/>
+                <field name="warehouse_vehicle_count"/>
+                <field name="operation_point_vehicle_count"/>
+                <field name="ongoing_receipts_deliveries"/>
+                <field name="avg_delivery_time"/>
+                <field name="shortage_requests"/>
+                <field name="damage_alerts"/>
+                <field name="alert_messages"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <div class="oe_kanban_details">
+                                <strong><field name="name"/></strong><br/>
+                                <span>Date: <field name="date"/></span><br/>
+                                <strong>Vehicle KPIs:</strong><br/>
+                                <span>Total Vehicles: <field name="total_vehicles"/></span><br/>
+                                <span>Ready: <field name="ready_vehicles"/></span><br/>
+                                <span>Readiness: <field name="readiness_percentage" widget="percentage"/></span><br/>
+                                <strong>Trip KPIs:</strong><br/>
+                                <span>Total Trips: <field name="trip_count"/></span><br/>
+                                <span>Scheduled: <field name="scheduled_trips"/></span><br/>
+                                <span>Ongoing: <field name="ongoing_trips"/></span><br/>
+                                <span>Completed: <field name="completed_trips"/></span><br/>
+                                <strong>Contract KPIs:</strong><br/>
+                                <span>Active Contracts: <field name="active_contracts"/></span><br/>
+                                <span>Shortage Contracts: <field name="shortage_contracts"/></span><br/>
+                                <strong>Other KPIs:</strong><br/>
+                                <span>Warehouse Vehicles: <field name="warehouse_vehicle_count"/></span><br/>
+                                <span>Operation Point Vehicles: <field name="operation_point_vehicle_count"/></span><br/>
+                                <span>Ongoing Receipts/Deliveries: <field name="ongoing_receipts_deliveries"/></span><br/>
+                                <span>Avg. Delivery Time: <field name="avg_delivery_time" widget="float_time"/></span><br/>
+                                <strong>Alerts:</strong><br/>
+                                <span>Shortages: <field name="shortage_requests"/></span><br/>
+                                <span>Damages: <field name="damage_alerts"/></span><br/>
+                                <span>Messages: <field name="alert_messages"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Operations Dashboard Search View -->
+    <!-- <record id="view_operations_dashboard_search" model="ir.ui.view">
+        <field name="name">operations.dashboard.search</field>
+        <field name="model">operations.dashboard</field>
+        <field name="arch" type="xml">
+            <search string="Operations Dashboards">
+                <field name="name"/>
+                <field name="date"/>
+                <filter string="Today" name="today" domain="[('date', '=', context_today())]"/>
+                <filter string="This Week" name="this_week" domain="[('date', '>=', (context_today() - relativedelta(weeks=1)).strftime('%Y-%m-%d')), ('date', '<=', context_today())]"/>
+                <filter string="This Month" name="this_month" domain="[('date', '>=', (context_today() - relativedelta(months=1)).strftime('%Y-%m-%d')), ('date', '<=', context_today())]"/>
+                <filter string="With Shortages" name="shortages" domain="[('shortage_requests', '>', 0)]"/>
+                <filter string="With Damages" name="damages" domain="[('damage_alerts', '>', 0)]"/>
+                <group expand="1" string="Group By">
+                    <filter name="date" string="Date" context="{'group_by': 'date'}"/>
+                </group>
+            </search>
+        </field>
+    </record> -->
+
+    <!-- Action for Operations Dashboard -->
+    <record id="action_operations_dashboard" model="ir.actions.act_window">
+        <field name="name">Operations Dashboard</field>
+        <field name="res_model">operations.dashboard</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Create your first operations dashboard.
+            </p>
+            <p>
+                Monitor vehicle, trip, contract, warehouse, operation point, and receipt/delivery KPIs, along with alerts for shortages and damages.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_operations_dashboard_root"
+              name="Operations"
+              sequence="80"/>
+    <menuitem id="menu_operations_dashboard"
+              name="Dashboard"
+              parent="menu_operations_dashboard_root"
+              action="action_operations_dashboard"
+              sequence="10"/>
+</odoo>

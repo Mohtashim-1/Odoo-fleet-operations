@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Trip Profile Form View -->
+    <record id="view_trip_profile_form" model="ir.ui.view">
+        <field name="name">trip.profile.form</field>
+        <field name="model">trip.profile</field>
+        <field name="arch" type="xml">
+            <form string="Trip Profile">
+                <header>
+
+                                        <!-- Sync Vehicle Info - Show on all statuses except cancelled and invoiced -->
+<button name="action_sync_vehicle_details"
+        type="object"
+        string="🔄 Sync Vehicle Info"
+        class="btn-info"
+        invisible="trip_status in ('cancelled', 'invoiced')"/>
+
+<!-- Set Scheduled - Show when status is confirm -->
+<button name="action_set_scheduled"
+        type="object"
+        string="📅 Set Scheduled"
+        class="btn-secondary"
+        invisible="trip_status != 'confirm'"/>
+
+<!-- Set Departed - Show when status is scheduled -->
+<button name="action_set_departed"
+        type="object"
+        string="🚗 Set Departed"
+        class="btn-primary"
+        invisible="trip_status != 'scheduled'"/>
+
+<!-- Set Completed - Show when status is departed -->
+<button name="action_set_completed"
+        type="object"
+        string="✅ Set Completed"
+        class="btn-success"
+        invisible="trip_status != 'departed'"/>
+
+<!-- Set Cancelled - Show when status is confirm or scheduled -->
+<button name="action_set_cancelled"
+        type="object"
+        string="❌ Cancel Trip"
+        class="btn-danger"
+        invisible="trip_status not in ('confirm', 'scheduled', 'departed')"/>
+
+<!-- Create Invoice - Show when status is completed or invoiced -->
+<button name="action_create_invoice"
+        type="object"
+        string="📄 Create Invoice"
+        class="btn-success"
+        invisible="trip_status not in ('completed', 'invoiced')"/>
+
+<button name="action_link_vehicle_lines_to_booking"
+        type="object"
+        string="Link Vehicle Lines"
+        class="btn-outline-secondary"
+        invisible="1"/>
+
+
+
+
+
+
+
+
+                    <field name="trip_status" widget="statusbar" clickable="True"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    
+                    <!-- Stat Buttons in Header Area -->
+                    <div class="oe_button_box" name="button_box">
+                        <!-- Invoice Stat Button - Show when invoice exists -->
+                        <button name="action_view_invoice" 
+                                type="object" 
+                                class="oe_stat_button" 
+                                icon="fa-file-text-o"
+                                string="Invoice"
+                                invisible="not invoice_id"
+                                help="View Invoice"/>
+                        
+                        <!-- Car Booking Stat Button - Show when booking exists and not cancelled/invoiced -->
+                        <button name="action_view_booking" 
+                                type="object" 
+                                class="oe_stat_button" 
+                                icon="fa-arrow-left"
+                                string="Car Booking"
+                                invisible="not booking_id or trip_status in ('cancelled', 'invoiced')"
+                                help="View Car Booking"/>
+                    </div>
+
+                <!-- Basic Information -->
+                    <group string="Basic Information">
+                        <group>
+                            <field name="booking_type" required="1" 
+                            widget="selection"
+                            readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')"
+                            />
+                            <field name="invoice_id" invisible="1"/>
+
+
+                        
+
+                                           
+
+
+                              
+                        </group>
+                        <group>
+                            <field name="region" required="1" widget="selection" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')"/>
+                            <field name="city" options="{'no_create': True}" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+                            <field name="location_id" string="Branch" options="{'no_create': True}" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Booking Details -->
+                    <group string="Booking Details">
+                        <group>
+                            <field name="booking_id" string="Car Booking" options="{'no_create': True}" widget="many2one" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+                         <field name="customer_ref_number" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+                         
+                         <field name="business_type" widget="selection" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+                            <field name="customer_name" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+                             <field name="guest_name" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+
+                              <field name="reservation_status" widget="selection" readonly="1"/>
+
+                              
+
+                                 
+
+                                   
+
+                                     <field name="flight_number" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+
+                                     <field name="mobile" string="Customer Phone" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')"/>
+                                    <field name="guest_phone" string="Guest Phone" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')"/>
+                                               <field name="hotel_room_number" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+                                     
+
+
+         
+
+                         </group>
+                         <group>
+                             <field name="date_of_service" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+                            <field name="payment_type" widget="selection" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+
+
+                           <field name="attachment_ids" widget="many2many_binary" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')"/>
+                                             
+                         </group>
+                    </group>
+
+                     <group string="Airport Details">
+                      <group>
+                         <field name="airport_id" options="{'no_create': True}" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+                       
+                       
+                        </group>
+                        <group>
+                         <field name="location_from" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+                         <field name="location_to" readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')" />
+                        </group>
+
+                    </group>
+
+
+
+
+
+                    <notebook>
+                        <page string="Vehicle Lines">
+                            <field name="vehicle_line_ids" readonly="trip_status in ('completed', 'cancelled')">
+                                <list editable="bottom">
+                                                                                                                                 <!-- <field name="vehicle_type" invisible="1"/> -->
+                             <!-- <field name="type_of_service_id" string="Service Type" invisible="1"/> -->
+
+                                    <field name="start_date" string="Service date" readonly="parent.trip_status == 'departed'"/>
+                                <field name="end_date" readonly="parent.trip_status in ('completed', 'cancelled')"/>
+                                <field name="total_hours" readonly="parent.trip_status == 'departed'"/>
+                                
+                                <field name="duration" readonly="parent.trip_status == 'departed'"/>
+                                 <field name="qty" readonly="parent.trip_status == 'departed'"/>
+                                   <field name="unit_price" readonly="parent.trip_status == 'departed'"/>
+                                    <field name="extra_hour" readonly="parent.trip_status != 'departed'"/>
+                                    <field name="extra_hour_charges" readonly="parent.trip_status == 'departed'"/>
+                                    <field name="amount"
+                                    readonly="extra_hour_charges == False or parent.trip_status == 'departed'"/>
+                                     <field name="car_model_id" readonly="parent.trip_status == 'departed'"/>
+                                   <field name="car_year" readonly="parent.trip_status == 'departed'"/>
+                                   <field name="service_type_id" readonly="parent.trip_status == 'departed'"/>
+                                   <!-- <field name="car_booking_line_id" invisible="1" readonly="parent.trip_status == 'departed'"/> -->
+
+                                   <!-- <field name="fleet_vehicle_id" optional="show" /> -->
+                                    <field name="vehicle_id" string="Vehicle Number Plat" readonly="parent.trip_status in ('departed', 'completed', 'cancelled')"/>
+
+                                    <field name="driver_name" optional="show" readonly="parent.trip_status in ('departed', 'completed', 'cancelled')"/>
+                                    <field name="mobile_no" optional="show" readonly="parent.trip_status in ('departed', 'completed', 'cancelled')"/>
+
+                                    <field name="id_no" optional="show" readonly="parent.trip_status in ('departed', 'completed', 'cancelled')"/>
+
+
+                                    <!-- <field name="driver_id"/>
+
+                                    <field name="car_year"/> -->
+                                    <!-- <field name="car_plate_no"/> -->
+
+
+                                    <!-- <field name="product_id"/> -->
+                                
+
+
+
+
+                                    <!-- <field name="requested_quantity"/>
+                                    <field name="used_quantity" readonly="1"/> -->
+                                    <!-- <field name="vehicle_ids" widget="many2many_tags"/> -->
+                                    <!-- <field name="delivery_date"/> -->
+                                    <!-- <field name="expected_return_date"/> -->
+                                    <!-- <field name="required_drivers"/>
+                                    <field name="available_drivers"/>
+                                    <field name="driver_shortage" readonly="1"/> -->
+                                    <field name="kilometer_out" optional="show" readonly="parent.trip_status != 'departed'"/>
+                                    <field name="kilometer_in" optional="show" readonly="parent.trip_status != 'departed'"/>
+                                    
+                                    <field name="kilometer_difference" optional="show" readonly="parent.trip_status != 'departed'"/>
+
+
+                                     <button name="action_open_checklist"
+                                        type="object"
+                                        string="Open Checklist"
+                                        class="btn-primary" optional="show"/>
+                                    <field name="guest_ids" optional="hide" widget="many2many_tags" readonly="parent.trip_status == 'departed'"/>
+                                    <field name="notes" readonly="parent.trip_status == 'departed'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Add any additional trip notes..." readonly="trip_status in ('scheduled', 'departed', 'completed', 'cancelled')"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                 <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Trip Profile Tree View -->
+    <record id="view_trip_profile_tree" model="ir.ui.view">
+        <field name="name">trip.profile.tree</field>
+        <field name="model">trip.profile</field>
+        <field name="arch" type="xml">
+            <list string="Trip Profiles">
+                <field name="name"/>
+                <field name="trip_type"/>
+                <field name="service_type"/>
+                <field name="departure_datetime"/>
+                <field name="expected_arrival_datetime"/>
+                <field name="departure_point_id"/>
+                <field name="arrival_point_id"/>
+                <field name="driver_id"/>
+                <field name="trip_status"/>
+                <field name="contract_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Trip Profile Kanban View -->
+    <record id="view_trip_profile_kanban" model="ir.ui.view">
+        <field name="name">trip.profile.kanban</field>
+        <field name="model">trip.profile</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="trip_type"/>
+                <field name="service_type"/>
+                <field name="departure_datetime"/>
+                <field name="expected_arrival_datetime"/>
+                <field name="departure_point_id"/>
+                <field name="arrival_point_id"/>
+                <field name="driver_id"/>
+                <field name="trip_status"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card">
+                            <div class="oe_kanban_details">
+                                <strong><field name="name"/></strong><br/>
+                                <span>Type: <field name="trip_type"/></span><br/>
+                                <span>Service: <field name="service_type"/></span><br/>
+                                <span>Departure: <field name="departure_datetime"/></span><br/>
+                                <span>Arrival: <field name="expected_arrival_datetime"/></span><br/>
+                                <span>From: <field name="departure_point_id"/></span><br/>
+                                <span>To: <field name="arrival_point_id"/></span><br/>
+                                <span>Driver: <field name="driver_id"/></span><br/>
+                                <span>Status: <field name="trip_status"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Trip Profile Search View -->
+    <record id="view_trip_profile_search" model="ir.ui.view">
+        <field name="name">trip.profile.search</field>
+        <field name="model">trip.profile</field>
+        <field name="arch" type="xml">
+            <search string="Trip Profiles">
+                <field name="name"/>
+                <field name="contract_id"/>
+                <field name="driver_id"/>
+                <field name="departure_point_id"/>
+                <field name="arrival_point_id"/>
+                <filter string="Contract Trips" name="contract" domain="[('trip_type', '=', 'contract')]"/>
+                <filter string="Individual Trips" name="individual" domain="[('trip_type', '=', 'individual')]"/>
+                <filter string="With Driver" name="with_driver" domain="[('service_type', '=', 'with_driver')]"/>
+                <filter string="Without Driver" name="without_driver" domain="[('service_type', '=', 'without_driver')]"/>
+                <filter string="Scheduled" name="scheduled" domain="[('trip_status', '=', 'scheduled')]"/>
+                <filter string="Departed" name="departed" domain="[('trip_status', '=', 'departed')]"/>
+                <filter string="Completed" name="completed" domain="[('trip_status', '=', 'completed')]"/>
+                <filter string="Cancelled" name="cancelled" domain="[('trip_status', '=', 'cancelled')]"/>
+                <group expand="1" string="Group By">
+                    <filter name="trip_type" string="Trip Type" context="{'group_by': 'trip_type'}"/>
+                    <filter name="service_type" string="Service Type" context="{'group_by': 'service_type'}"/>
+                    <filter name="trip_status" string="Status" context="{'group_by': 'trip_status'}"/>
+                    <filter name="departure_point_id" string="Departure Point" context="{'group_by': 'departure_point_id'}"/>
+                    <filter name="arrival_point_id" string="Arrival Point" context="{'group_by': 'arrival_point_id'}"/>
+                    <filter name="driver_id" string="Driver" context="{'group_by': 'driver_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Trip Vehicle Line Form View -->
+    <record id="view_trip_vehicle_line_form" model="ir.ui.view">
+        <field name="name">trip.vehicle.line.form</field>
+        <field name="model">trip.vehicle.line</field>
+        <field name="arch" type="xml">
+            <form string="Trip Vehicle Line">
+                <sheet>
+                    <group>
+                        <group string="Vehicle Details">
+                            <field name="vehicle_type"/>
+                            <!-- <field name="requested_quantity"/>
+                            <field name="used_quantity" readonly="1"/> -->
+                            <field name="vehicle_ids" widget="many2many_tags"/>
+                        </group>
+                        <group string="Dates">
+                            <field name="delivery_date"/>
+                            <field name="expected_return_date"/>
+                        </group>
+                    </group>
+                    <!-- <group string="Driver Details">
+                        <field name="required_drivers"/>
+                        <field name="available_drivers"/>
+                        <field name="driver_shortage" readonly="1"/>
+                    </group> -->
+                    <group>
+                        <field name="notes" placeholder="Add any notes for this vehicle line..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Trip Profile -->
+    <record id="action_trip_profile" model="ir.actions.act_window">
+        <field name="name">Trip Profiles</field>
+        <field name="res_model">trip.profile</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_trip_profile_search"/>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Create your first trip profile.
+            </p>
+            <p>
+                Manage trip details, assign vehicles, and track statuses.
+            </p>
+        </field>
+    </record>
+
+    <!-- Trip Cancellation Wizard Form View -->
+    <record id="view_trip_cancellation_wizard_form" model="ir.ui.view">
+        <field name="name">trip.cancellation.wizard.form</field>
+        <field name="model">trip.cancellation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Confirm Trip Cancellation">
+                <div class="alert alert-warning" role="alert">
+                    <h4 class="alert-heading">⚠️ Warning!</h4>
+                    <p>Are you sure you want to cancel this trip?</p>
+                    <p><strong>Trip:</strong> <field name="trip_id" readonly="1"/></p>
+                    <p>This action cannot be undone.</p>
+                </div>
+                <footer>
+                    <button name="action_confirm_cancellation" 
+                            type="object" 
+                            string="Yes, Cancel Trip" 
+                            class="btn-danger"/>
+                    <button string="No, Keep Trip" 
+                            type="object" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_trip_profile_root"
+              name="Trip Management"
+              sequence="50"/>
+    <menuitem id="menu_trip_profile"
+              name="Trips"
+              parent="menu_trip_profile_root"
+              action="action_trip_profile"
+              sequence="10"/>
+</odoo>

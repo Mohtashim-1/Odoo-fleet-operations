@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vehicle Profile Form View -->
+    <record id="view_vehicle_profile_form" model="ir.ui.view">
+        <field name="name">vehicle.profile.form</field>
+        <field name="model">vehicle.profile</field>
+        <field name="arch" type="xml">
+            <form string="Vehicle Profile">
+                <header>
+                    <field name="vehicle_status" widget="statusbar" clickable="True"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Enter vehicle reference (e.g., DS-VAN-001)..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Vehicle Details">
+                            <field name="ownership"/>
+                            <field name="vehicle_type"/>
+                            <field name="make_model"/>
+                            <field name="fuel_type"/>
+                            <field name="vehicle_color"/>
+                        </group>
+                        <group string="Identification">
+                            <field name="chassis_number"/>
+                            <field name="plate_number"/>
+                            <field name="engine_number"/>
+                            <field name="manufacture_year"/>
+                            <field name="odometer_reading" widget="float"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Operation">
+                            <field name="operation_start_date"/>
+                            <field name="branch_id" context="{'form_view_ref': 'operation_point_form'}"/>
+                            <field name="last_maintenance_date"/>
+                        </group>
+                        <group string="Insurance &amp; Registration">
+                            <field name="registration_validity"/>
+                            <field name="insurance_company"/>
+                            <field name="insurance_policy_number"/>
+                            <field name="insurance_expiry"/>
+                        </group>
+                    </group>
+                </sheet>
+                 <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vehicle Profile Tree View -->
+    <record id="view_vehicle_profile_tree" model="ir.ui.view">
+        <field name="name">vehicle.profile.tree</field>
+        <field name="model">vehicle.profile</field>
+        <field name="arch" type="xml">
+            <list string="Vehicle Profiles">
+                <field name="name"/>
+                <field name="plate_number"/>
+                <field name="vehicle_type"/>
+                <field name="make_model"/>
+                <field name="vehicle_status"/>
+                <field name="branch_id"/>
+                <field name="odometer_reading" widget="float"/>
+                <field name="insurance_expiry"/>
+                <field name="last_maintenance_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vehicle Profile Kanban View -->
+    <record id="view_vehicle_profile_kanban" model="ir.ui.view">
+        <field name="name">vehicle.profile.kanban</field>
+        <field name="model">vehicle.profile</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="plate_number"/>
+                <field name="vehicle_type"/>
+                <field name="make_model"/>
+                <field name="vehicle_status"/>
+                <field name="branch_id"/>
+                <field name="insurance_expiry"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <div class="oe_kanban_details">
+                                <strong><field name="name"/></strong><br/>
+                                <span>Plate: <field name="plate_number"/></span><br/>
+                                <span>Type: <field name="vehicle_type"/></span><br/>
+                                <span>Make: <field name="make_model"/></span><br/>
+                                <span>Status: <field name="vehicle_status"/></span><br/>
+                                <span>Branch: <field name="branch_id"/></span><br/>
+                                <span>Insurance Expiry: <field name="insurance_expiry"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Vehicle Profile Search View -->
+    <!-- <record id="view_vehicle_profile_search" model="ir.ui.view">
+        <field name="name">vehicle.profile.search</field>
+        <field name="model">vehicle.profile</field>
+        <field name="arch" type="xml">
+            <search string="Vehicle Profiles">
+                <field name="name"/>
+                <field name="plate_number"/>
+                <field name="make_model"/>
+                <field name="chassis_number"/>
+                <field name="branch_id"/>
+                <filter string="Ready" name="ready" domain="[('vehicle_status', '=', 'ready')]"/>
+                <filter string="Under Maintenance" name="under_maintenance" domain="[('vehicle_status', '=', 'under_maintenance')]"/>
+                <filter string="With Client" name="with_client" domain="[('vehicle_status', '=', 'with_client')]"/>
+                <filter string="Out of Service" name="out_of_service" domain="[('vehicle_status', '=', 'out_of_service')]"/>
+                <filter string="Insurance Expired" name="insurance_expired" domain="[('insurance_expiry', '&lt;', fields.Date.today())]"/>
+                <group expand="1" string="Group By">
+                    <filter name="vehicle_type" string="Vehicle Type" context="{'group_by': 'vehicle_type'}"/>
+                    <filter name="vehicle_status" string="Status" context="{'group_by': 'vehicle_status'}"/>
+                    <filter name="branch_id" string="Branch" context="{'group_by': 'branch_id'}"/>
+                    <filter name="ownership" string="Ownership" context="{'group_by': 'ownership'}"/>
+                    <filter name="fuel_type" string="Fuel Type" context="{'group_by': 'fuel_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record> -->
+
+    <!-- Action for Vehicle Profile -->
+    <record id="action_vehicle_profile" model="ir.actions.act_window">
+        <field name="name">Vehicle Profiles</field>
+        <field name="res_model">vehicle.profile</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Create your first vehicle profile.
+            </p>
+            <p>
+                Manage vehicle details, track status, insurance, and assign to operation points.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_vehicle_profile_root"
+              name="Vehicle Management"
+              sequence="20"/>
+    <menuitem id="menu_vehicle_profile"
+              name="Vehicles"
+              parent="menu_vehicle_profile_root"
+              action="action_vehicle_profile"
+              sequence="10"/>
+</odoo>

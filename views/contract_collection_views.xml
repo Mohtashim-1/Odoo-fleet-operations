@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Contract Collection Form View -->
+    <record id="view_contract_collection_form" model="ir.ui.view">
+        <field name="name">contract.collection.form</field>
+        <field name="model">contract.collection</field>
+        <field name="arch" type="xml">
+            <form string="Contract Collection">
+                <header>
+                    <field name="collection_status" widget="statusbar" clickable="False"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="contract_id" context="{'form_view_ref': 'sale.view_order_form'}"/>
+                            <field name="client_id" readonly="1"/>
+                            <field name="contract_type"/>
+                        </group>
+                        <group>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="total_value" widget="monetary"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Scheduled Payments">
+                            <field name="payment_line_ids">
+                                <list editable="bottom">
+                                    <field name="installment"/>
+                                    <field name="due_date"/>
+                                    <field name="amount_required" widget="monetary"/>
+                                    <field name="amount_paid" widget="monetary"/>
+                                    <field name="actual_payment_date"/>
+                                    <field name="payment_method"/>
+                                    <field name="status"/>
+                                    <field name="notes"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Communication &amp; Follow-up">
+                            <field name="communication_ids">
+                                <list editable="bottom">
+                                    <field name="date"/>
+                                    <field name="method"/>
+                                    <field name="employee_id"/>
+                                    <field name="result"/>
+                                    <field name="recommendation"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Attachments">
+                            <field name="attachment_ids" widget="many2many_binary"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Contract Collection Tree View -->
+    <record id="view_contract_collection_tree" model="ir.ui.view">
+        <field name="name">contract.collection.tree</field>
+        <field name="model">contract.collection</field>
+        <field name="arch" type="xml">
+            <list string="Contract Collections">
+                <field name="name"/>
+                <field name="contract_id"/>
+                <field name="client_id"/>
+                <field name="contract_type"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="total_value" widget="monetary"/>
+                <field name="collection_status"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Contract Collection Search View -->
+    <record id="view_contract_collection_search" model="ir.ui.view">
+        <field name="name">contract.collection.search</field>
+        <field name="model">contract.collection</field>
+        <field name="arch" type="xml">
+            <search string="Contract Collections">
+                <field name="name"/>
+                <field name="contract_id"/>
+                <field name="client_id"/>
+                <filter string="On Time" name="on_time" domain="[('collection_status', '=', 'on_time')]"/>
+                <filter string="Partially Overdue" name="partially_overdue" domain="[('collection_status', '=', 'partially_overdue')]"/>
+                <filter string="Fully Overdue" name="fully_overdue" domain="[('collection_status', '=', 'fully_overdue')]"/>
+                <filter string="On Hold" name="on_hold" domain="[('collection_status', '=', 'on_hold')]"/>
+                <filter string="Escalation Needed" name="escalation_needed" domain="[('collection_status', '=', 'escalation_needed')]"/>
+                <group expand="1" string="Group By">
+                    <filter name="contract_type" string="Contract Type" context="{'group_by': 'contract_type'}"/>
+                    <filter name="collection_status" string="Collection Status" context="{'group_by': 'collection_status'}"/>
+                    <filter name="client_id" string="Client" context="{'group_by': 'client_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Contract Payment Line Form View -->
+    <record id="view_contract_payment_line_form" model="ir.ui.view">
+        <field name="name">contract.payment.line.form</field>
+        <field name="model">contract.payment.line</field>
+        <field name="arch" type="xml">
+            <form string="Payment Line">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="installment"/>
+                            <field name="due_date"/>
+                            <field name="amount_required" widget="monetary"/>
+                        </group>
+                        <group>
+                            <field name="amount_paid" widget="monetary"/>
+                            <field name="actual_payment_date"/>
+                            <field name="payment_method"/>
+                            <field name="status" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notes" placeholder="Add any additional notes..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Contract Communication Form View -->
+    <record id="view_contract_communication_form" model="ir.ui.view">
+        <field name="name">contract.communication.form</field>
+        <field name="model">contract.communication</field>
+        <field name="arch" type="xml">
+            <form string="Communication">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="date"/>
+                            <field name="method"/>
+                            <field name="employee_id"/>
+                        </group>
+                        <group>
+                            <field name="result" placeholder="Describe the outcome of the communication..."/>
+                            <field name="recommendation" placeholder="Any follow-up actions or recommendations..."/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Contract Collection -->
+    <record id="action_contract_collection" model="ir.actions.act_window">
+        <field name="name">Contract Collections</field>
+        <field name="res_model">contract.collection</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_contract_collection_search"/>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Create your first contract collection.
+            </p>
+            <p>
+                Manage your contract collections, track payments, and monitor communications.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_contract_collection_root"
+              name="Contract Collections"
+              sequence="10"/>
+    <menuitem id="menu_contract_collection"
+              name="Collections"
+              parent="menu_contract_collection_root"
+              action="action_contract_collection"
+              sequence="10"/>
+</odoo>
