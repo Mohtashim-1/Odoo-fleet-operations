@@ -35,6 +35,7 @@
     'views/menu.xml',
     'views/contract_collection_views.xml',
     'views/trip_profile_views.xml',
+    'views/trip_vehicle_line_dashboard_views.xml',
     'views/res_users_view.xml',
     'views/vehicle_profile_views.xml',
     'views/vehicle_receipt_delivery_views.xml',
