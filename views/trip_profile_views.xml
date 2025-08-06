@@ -177,8 +177,8 @@
 
                     <notebook>
                         <page string="Vehicle Lines">
-                            <field name="vehicle_line_ids" readonly="trip_status in ('completed', 'cancelled')">
-                                <list editable="bottom">
+                            <field name="vehicle_line_ids" readonly="trip_status in ('completed', 'cancelled')" create="false" options="{'no_create': True, 'no_create_edit': True}" context="{'create': False}">
+                                <list editable="bottom" create="false">
                                                                                                                                  <!-- <field name="vehicle_type" invisible="1"/> -->
                              <!-- <field name="type_of_service_id" string="Service Type" invisible="1"/> -->
 
