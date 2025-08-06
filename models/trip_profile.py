@@ -2196,6 +2196,14 @@ class TripVehicleLine(models.Model):
     guest_ids = fields.Many2many(
         'res.partner')
     
+    # Checklist tracking field
+    has_checklist_items = fields.Boolean(
+        string='Has Checklist Items',
+        compute='_compute_has_checklist_items',
+        store=False,
+        help='True if this vehicle line has checklist items'
+    )
+    
     # Computed fields for dashboard
     trip_status = fields.Selection(
         related='trip_id.trip_status',
@@ -2316,6 +2324,34 @@ class TripVehicleLine(models.Model):
             print(f"DEBUG: base_amount={base_amount}, extra_amount={extra_amount}")
             print(f"DEBUG: total_amount={record.amount}")
             print(f"DEBUG: Formula: ({unit_price} × {qty}) + ({extra_hour_charges} × {extra_hour}) = {record.amount}")
+    
+    def _compute_has_checklist_items(self):
+        """Compute whether this vehicle line has checklist items"""
+        for record in self:
+            if record.id:
+                # Check if there's a checklist for this vehicle line
+                checklist = self.env['trip.vehicle.line.checklist'].search([
+                    ('trip_vehicle_line_id', '=', record.id)
+                ], limit=1)
+                
+                print(f"DEBUG: Vehicle line {record.id} - Found checklist: {checklist}")
+                
+                if checklist:
+                    # Check if the checklist has any items - use count() instead of search with limit
+                    checklist_items_count = self.env['trip.vehicle.line.checklist.line'].search_count([
+                        ('checklist_id', '=', checklist.id)
+                    ])
+                    
+                    print(f"DEBUG: Vehicle line {record.id} - Checklist items count: {checklist_items_count}")
+                    
+                    record.has_checklist_items = checklist_items_count > 0
+                    print(f"DEBUG: Vehicle line {record.id} - has_checklist_items set to: {record.has_checklist_items}")
+                else:
+                    record.has_checklist_items = False
+                    print(f"DEBUG: Vehicle line {record.id} - No checklist found, has_checklist_items set to: False")
+            else:
+                record.has_checklist_items = False
+                print(f"DEBUG: Vehicle line {record.id} - No ID, has_checklist_items set to: False")
     
     @api.onchange('vehicle_id')
     def _onchange_vehicle_id(self):

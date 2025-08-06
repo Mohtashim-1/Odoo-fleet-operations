@@ -232,11 +232,20 @@
                                     
                                     <field name="kilometer_difference" optional="show" readonly="parent.trip_status != 'departed'"/>
 
+                                    <field name="has_checklist_items" invisible="1" />
 
                                      <button name="action_open_checklist"
                                         type="object"
                                         string="Open Checklist"
-                                        class="btn-primary" optional="show"/>
+                                        class="btn-success" 
+                                        optional="show"
+                                        invisible="not has_checklist_items"/>
+                                     <button name="action_open_checklist"
+                                        type="object"
+                                        string="Open Checklist"
+                                        class="btn-info" 
+                                        optional="show"
+                                        invisible="has_checklist_items"/>
                                     <field name="guest_ids" optional="hide" widget="many2many_tags" readonly="parent.trip_status == 'departed'"/>
                                     <field name="notes" readonly="parent.trip_status == 'departed'"/>
                                 </list>
