@@ -232,8 +232,6 @@
                                     
                                     <field name="kilometer_difference" optional="show" readonly="parent.trip_status != 'departed'"/>
 
-                                    <field name="has_checklist_items" invisible="1" />
-
                                      <button name="action_open_checklist"
                                         type="object"
                                         string="Open Checklist"
